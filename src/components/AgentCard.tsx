@@ -1,88 +1,123 @@
 import { Link } from 'react-router-dom';
-import { Star, ShoppingCart, Check } from 'lucide-react';
+import { Download, Users, MoreHorizontal, Circle } from 'lucide-react';
 import type { Agent } from '../types';
 import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
 
 interface Props {
   agent: Agent;
 }
 
+function SourceBadge({ source }: { source: Agent['source'] }) {
+  if (source === 'Official (Verified)') {
+    return (
+      <span className="flex items-center gap-1 text-[11px] font-medium text-red-600">
+        <span className="w-2 h-2 rounded-full bg-red-600 inline-block" />
+        Official (Verified)
+      </span>
+    );
+  }
+  if (source === 'Partner') {
+    return (
+      <span className="flex items-center gap-1 text-[11px] font-medium text-gray-500">
+        <Circle size={8} className="text-gray-400" />
+        Partner
+      </span>
+    );
+  }
+  return (
+    <span className="flex items-center gap-1 text-[11px] font-medium text-gray-400">
+      <Circle size={8} className="text-gray-300" />
+      Custom (Community)
+    </span>
+  );
+}
+
 export default function AgentCard({ agent }: Props) {
   const { addToCart, items } = useCart();
+  const { user, installAgent } = useAuth();
   const inCart = items.some((i) => i.agent.id === agent.id);
+  const isInstalled = user?.installedAgents.includes(agent.id);
+
+  const handleAction = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (agent.price === 0) {
+      installAgent(agent.id);
+    } else if (!inCart) {
+      addToCart(agent);
+    }
+  };
 
   return (
-    <div className="group relative bg-[#16161e] border border-white/8 rounded-2xl overflow-hidden hover:border-violet-500/40 transition-all duration-300 hover:shadow-xl hover:shadow-violet-500/10 flex flex-col">
-      {/* Gradient header */}
-      <div className={`h-24 bg-gradient-to-br ${agent.gradient} flex items-center justify-center text-4xl relative`}>
-        <span>{agent.icon}</span>
-        {agent.featured && (
-          <span className="absolute top-2 right-2 text-[10px] font-bold bg-white/20 backdrop-blur-sm text-white px-2 py-0.5 rounded-full">
-            FEATURED
-          </span>
-        )}
+    <div className="bg-white border border-gray-200 rounded-xl p-5 hover:border-gray-300 hover:shadow-sm transition-all flex flex-col gap-3">
+      {/* Top row */}
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex items-center gap-3">
+          <div
+            className="w-10 h-10 rounded-lg flex items-center justify-center text-white text-sm font-bold shrink-0"
+            style={{ backgroundColor: agent.logoColor }}
+          >
+            {agent.logoText}
+          </div>
+          <SourceBadge source={agent.source} />
+        </div>
+        <button className="text-gray-400 hover:text-gray-600 transition-colors p-0.5">
+          <MoreHorizontal size={16} />
+        </button>
       </div>
 
-      <div className="p-5 flex flex-col flex-1 gap-3">
-        {/* Header */}
-        <div>
-          <div className="flex items-start justify-between gap-2 mb-1">
-            <Link
-              to={`/agent/${agent.id}`}
-              className="font-semibold text-white text-lg hover:text-violet-300 transition-colors leading-tight"
-            >
-              {agent.name}
-            </Link>
-            <span className="text-lg font-bold text-white whitespace-nowrap">
-              {agent.price === 0 ? (
-                <span className="text-emerald-400 text-sm font-semibold">Free</span>
-              ) : (
-                <span className="text-sm">${agent.price}<span className="text-slate-400 text-xs font-normal">/mo</span></span>
-              )}
-            </span>
-          </div>
-          <p className="text-slate-400 text-sm">{agent.tagline}</p>
-        </div>
-
-        {/* Tags */}
-        <div className="flex flex-wrap gap-1.5">
-          {agent.tags.slice(0, 3).map((tag) => (
-            <span key={tag} className="text-[11px] bg-white/5 border border-white/8 text-slate-400 px-2 py-0.5 rounded-full">
-              {tag}
-            </span>
-          ))}
-        </div>
-
-        {/* Rating & installs */}
-        <div className="flex items-center justify-between text-sm text-slate-400 mt-auto pt-2">
-          <div className="flex items-center gap-1">
-            <Star size={13} className="fill-amber-400 text-amber-400" />
-            <span className="text-white font-medium">{agent.rating}</span>
-            <span>({agent.reviewCount})</span>
-          </div>
-          <span>{(agent.installs / 1000).toFixed(1)}k installs</span>
-        </div>
-
-        {/* Add to cart */}
-        <button
-          onClick={(e) => { e.preventDefault(); addToCart(agent); }}
-          disabled={inCart || agent.price === 0}
-          className={`mt-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 ${
-            agent.price === 0
-              ? 'bg-emerald-500/15 text-emerald-400 cursor-default'
-              : inCart
-              ? 'bg-violet-500/15 text-violet-300 cursor-default'
-              : 'bg-violet-600 hover:bg-violet-500 text-white shadow-lg shadow-violet-600/20 hover:shadow-violet-500/30'
-          }`}
+      {/* Name + handle */}
+      <div>
+        <Link
+          to={`/agent/${agent.id}`}
+          className="text-[15px] font-semibold text-gray-900 hover:text-red-600 transition-colors leading-tight block mb-0.5"
         >
-          {agent.price === 0 ? (
-            <>Install Free</>
-          ) : inCart ? (
-            <><Check size={15} /> Added to cart</>
-          ) : (
-            <><ShoppingCart size={15} /> Add to cart</>
-          )}
-        </button>
+          {agent.name}
+        </Link>
+        <p className="text-xs text-gray-400">
+          {agent.handle} · {agent.version}
+        </p>
+      </div>
+
+      {/* Description */}
+      <p className="text-sm text-gray-600 leading-relaxed line-clamp-3 flex-1">
+        {agent.description}
+      </p>
+
+      {/* Tags */}
+      <div className="flex flex-wrap gap-1.5">
+        {agent.tags.map((tag) => (
+          <span key={tag} className="text-[11px] bg-gray-100 text-gray-600 px-2 py-0.5 rounded-md">
+            {tag}
+          </span>
+        ))}
+      </div>
+
+      {/* Footer */}
+      <div className="flex items-center gap-3 pt-1 border-t border-gray-100">
+        <div className="flex items-center gap-1 text-xs text-gray-500">
+          <Download size={12} />
+          <span>{(agent.installs / 1000).toFixed(1)}K installs</span>
+        </div>
+        <div className="flex items-center gap-1 text-xs text-gray-500">
+          <Users size={12} />
+          <span>{(agent.activeUsers / 1000).toFixed(1)}K active</span>
+        </div>
+        <div className="ml-auto">
+          <button
+            onClick={handleAction}
+            disabled={isInstalled || (inCart && agent.price > 0)}
+            className={`text-xs font-semibold px-3 py-1.5 rounded-lg border transition-colors ${
+              isInstalled
+                ? 'border-green-200 text-green-700 bg-green-50 cursor-default'
+                : inCart && agent.price > 0
+                ? 'border-gray-200 text-gray-400 bg-gray-50 cursor-default'
+                : 'border-gray-300 text-gray-700 hover:border-red-300 hover:text-red-600 hover:bg-red-50 bg-white'
+            }`}
+          >
+            {isInstalled ? 'Installed' : inCart && agent.price > 0 ? 'In cart' : agent.price === 0 ? 'Use Agent' : 'Add to cart'}
+          </button>
+        </div>
       </div>
     </div>
   );

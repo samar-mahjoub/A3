@@ -12,16 +12,31 @@ interface AuthContextValue {
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<User | null>({
+    id: 'u1',
+    name: 'Alex Morgan',
+    email: 'alex.morgan@company.com',
+    avatar: 'AM',
+    level: 5,
+    levelTitle: 'Innovator',
+    cp: 2450,
+    installedAgents: ['github-copilot-cli', 'notion-ai', 'anthropic-claude'],
+    isAdmin: false,
+  });
 
   const login = async (email: string, _password: string) => {
     await new Promise((r) => setTimeout(r, 600));
+    const isAdmin = email.toLowerCase().includes('admin');
     setUser({
       id: 'u1',
-      name: email.split('@')[0].replace(/[._]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
+      name: isAdmin ? 'Admin' : email.split('@')[0].replace(/[._]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
       email,
-      avatar: email.slice(0, 2).toUpperCase(),
-      installedAgents: ['flow-planner'],
+      avatar: isAdmin ? 'AD' : email.slice(0, 2).toUpperCase(),
+      level: 5,
+      levelTitle: 'Innovator',
+      cp: 2450,
+      installedAgents: ['github-copilot-cli', 'notion-ai'],
+      isAdmin,
     });
   };
 
@@ -32,7 +47,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       name,
       email,
       avatar: name.slice(0, 2).toUpperCase(),
+      level: 1,
+      levelTitle: 'Explorer',
+      cp: 0,
       installedAgents: [],
+      isAdmin: false,
     });
   };
 
@@ -40,8 +59,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const installAgent = (agentId: string) => {
     setUser((prev) => {
-      if (!prev) return prev;
-      if (prev.installedAgents.includes(agentId)) return prev;
+      if (!prev || prev.installedAgents.includes(agentId)) return prev;
       return { ...prev, installedAgents: [...prev.installedAgents, agentId] };
     });
   };

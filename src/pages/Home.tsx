@@ -1,194 +1,273 @@
-import { useState, useMemo } from 'react';
-import { Search, SlidersHorizontal, Sparkles, X } from 'lucide-react';
-import AgentCard from '../components/AgentCard';
-import { agents, categories } from '../data/agents';
-import type { AgentCategory } from '../types';
+import { Link } from 'react-router-dom';
+import {
+  Bot, Zap, CheckCircle, Clock, ArrowRight, Plus,
+  Rocket, Users, FlaskConical, TrendingUp, Star,
+} from 'lucide-react';
+import Sparkline from '../components/Sparkline';
+import { useAuth } from '../context/AuthContext';
+import { agents } from '../data/agents';
 
-type SortKey = 'featured' | 'rating' | 'price-asc' | 'price-desc' | 'installs';
+const sparkData = {
+  agentsUsed: [12, 15, 11, 18, 20, 16, 22, 19, 24],
+  tasks: [80, 95, 88, 120, 105, 140, 130, 160, 186],
+  success: [94, 95.2, 96, 95.5, 96.8, 96.2, 97, 96.4],
+  time: [8, 10, 9, 12, 11, 14, 13, 15, 16.8],
+};
+
+const recentActivity = [
+  { id: 1, icon: Bot, color: 'text-red-500', action: 'You used Code Review Agent', sub: 'Code Review · Version 2.1', time: '10 min ago' },
+  { id: 2, icon: Zap, color: 'text-purple-500', action: 'You installed JIRA Connector Plugin', sub: 'Plugin', time: '1 hr ago' },
+  { id: 3, icon: FlaskConical, color: 'text-blue-500', action: 'You submitted "API Docs Agent" in DX Lab', sub: 'Idea Submission', time: '3 hrs ago' },
+  { id: 4, icon: Users, color: 'text-green-500', action: 'You shared Prompt Template: API Best Practices', sub: 'In DX Collective', time: '5 hrs ago' },
+];
+
+const continueBuildingItems = [
+  { name: 'API Docs Agent', status: 'In Progress', progress: 60 },
+  { name: 'Security Scan Agent', status: 'Draft', progress: 20 },
+  { name: 'Incident Triage Agent', status: 'Draft', progress: 10 },
+];
+
+const leaderboardTop = [
+  { rank: 1, name: 'Alex Kim', title: 'Principal Developer', avatar: 'AK', cp: 12450 },
+  { rank: 2, name: 'Sarah J.', title: 'AI Architect', avatar: 'SJ', cp: 9230 },
+  { rank: 3, name: 'Dev Team A', title: 'Platform Team', avatar: 'DT', cp: 7860 },
+  { rank: 4, name: 'Mike Ross', title: 'Senior Developer', avatar: 'MR', cp: 6210 },
+  { rank: 5, name: 'Code Wizards', title: 'Engineering Team', avatar: 'CW', cp: 5430 },
+];
+
+const publishSteps = [
+  { label: 'Define Use Case' },
+  { label: 'Build in DX Lab' },
+  { label: 'Test & Validate' },
+  { label: 'Submit for Review' },
+  { label: 'Publish to Marketplace' },
+];
+
+const recommendedAgents = agents.slice(0, 4);
 
 export default function Home() {
-  const [query, setQuery] = useState('');
-  const [category, setCategory] = useState<'All' | AgentCategory>('All');
-  const [sort, setSort] = useState<SortKey>('featured');
-  const [priceFilter, setPriceFilter] = useState<'all' | 'free' | 'paid'>('all');
-
-  const filtered = useMemo(() => {
-    let list = [...agents];
-
-    if (query.trim()) {
-      const q = query.toLowerCase();
-      list = list.filter(
-        (a) =>
-          a.name.toLowerCase().includes(q) ||
-          a.tagline.toLowerCase().includes(q) ||
-          a.tags.some((t) => t.includes(q)) ||
-          a.category.toLowerCase().includes(q),
-      );
-    }
-
-    if (category !== 'All') {
-      list = list.filter((a) => a.category === category);
-    }
-
-    if (priceFilter === 'free') list = list.filter((a) => a.price === 0);
-    if (priceFilter === 'paid') list = list.filter((a) => a.price > 0);
-
-    switch (sort) {
-      case 'rating':
-        list.sort((a, b) => b.rating - a.rating);
-        break;
-      case 'price-asc':
-        list.sort((a, b) => a.price - b.price);
-        break;
-      case 'price-desc':
-        list.sort((a, b) => b.price - a.price);
-        break;
-      case 'installs':
-        list.sort((a, b) => b.installs - a.installs);
-        break;
-      default:
-        list.sort((a, b) => (b.featured ? 1 : 0) - (a.featured ? 1 : 0));
-    }
-
-    return list;
-  }, [query, category, sort, priceFilter]);
-
-  const featuredAgents = agents.filter((a) => a.featured).slice(0, 3);
+  const { user } = useAuth();
 
   return (
-    <div className="flex-1">
-      {/* Hero */}
-      <div className="relative overflow-hidden border-b border-white/8">
-        <div className="absolute inset-0 bg-gradient-to-br from-violet-900/30 via-transparent to-indigo-900/20 pointer-events-none" />
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-violet-600/10 blur-3xl rounded-full pointer-events-none" />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center relative">
-          <div className="inline-flex items-center gap-2 bg-violet-500/10 border border-violet-500/20 text-violet-300 text-xs font-semibold px-3 py-1.5 rounded-full mb-6">
-            <Sparkles size={12} /> 8 agents available · Powered by Claude
-          </div>
-          <h1 className="text-5xl sm:text-6xl font-bold text-white tracking-tight mb-4 leading-tight">
-            The Marketplace for<br />
-            <span className="bg-gradient-to-r from-violet-400 to-indigo-400 bg-clip-text text-transparent">
-              AI Agents
-            </span>
+    <div className="p-6 max-w-[1400px] mx-auto">
+      {/* Page header */}
+      <div className="flex items-start justify-between mb-6">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">
+            Welcome back, {user?.name.split(' ')[0] ?? 'Guest'}!
           </h1>
-          <p className="text-slate-400 text-lg max-w-xl mx-auto mb-10">
-            Discover, deploy, and manage AI agents that automate your most complex workflows.
-          </p>
-
-          {/* Search */}
-          <div className="max-w-lg mx-auto relative">
-            <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" />
-            <input
-              type="text"
-              placeholder="Search agents by name, category, or tag…"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              className="w-full bg-white/5 border border-white/10 rounded-xl pl-11 pr-10 py-3.5 text-white placeholder-slate-500 focus:outline-none focus:border-violet-500/60 focus:bg-white/8 transition-all"
-            />
-            {query && (
-              <button
-                onClick={() => setQuery('')}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white transition-colors"
-              >
-                <X size={16} />
-              </button>
-            )}
-          </div>
+          <p className="text-sm text-gray-500 mt-0.5">What will you build, automate, or discover today?</p>
+        </div>
+        <div className="flex gap-2">
+          <Link
+            to="/lab"
+            className="flex items-center gap-1.5 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors shadow-sm shadow-red-600/20"
+          >
+            <Plus size={16} /> Build in DX Lab
+          </Link>
+          <Link
+            to="/how-to-publish"
+            className="flex items-center gap-1.5 bg-white hover:bg-gray-50 text-gray-700 text-sm font-semibold px-4 py-2 rounded-lg border border-gray-200 transition-colors"
+          >
+            <Rocket size={16} /> How to Publish
+          </Link>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-        {/* Featured strip */}
-        {!query && category === 'All' && (
-          <div className="mb-12">
-            <h2 className="text-white font-semibold text-xl mb-4 flex items-center gap-2">
-              <Sparkles size={18} className="text-violet-400" /> Featured Agents
-            </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              {featuredAgents.map((agent) => (
-                <div
-                  key={agent.id}
-                  className={`relative rounded-2xl bg-gradient-to-br ${agent.gradient} p-px`}
+      {/* Stats row */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        {[
+          { label: 'Agents Used', value: '24', change: '↑ 20%', sparkData: sparkData.agentsUsed, icon: Bot },
+          { label: 'Tasks Executed', value: '186', change: '↑ 18%', sparkData: sparkData.tasks, icon: Zap },
+          { label: 'Success Rate', value: '96.4%', change: '↑ 2.7%', sparkData: sparkData.success, icon: CheckCircle },
+          { label: 'Time Saved', value: '16.8 hrs', change: '↑ 15%', sparkData: sparkData.time, icon: Clock },
+        ].map(({ label, value, change, sparkData: sd, icon: Icon }) => (
+          <div key={label} className="bg-white border border-gray-200 rounded-xl p-4 flex flex-col gap-2">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Icon size={16} className="text-red-500" />
+                <span className="text-sm text-gray-500">{label}</span>
+              </div>
+              <Sparkline data={sd} color="#dc2626" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-gray-900">{value}</p>
+              <p className="text-xs text-green-600 font-medium mt-0.5">
+                {change} <span className="text-gray-400 font-normal">vs last 7 days</span>
+              </p>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Left column */}
+        <div className="lg:col-span-2 flex flex-col gap-6">
+          {/* Quick Access */}
+          <div className="bg-white border border-gray-200 rounded-xl p-5">
+            <h2 className="text-base font-semibold text-gray-900 mb-4">Quick Access</h2>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              {[
+                { to: '/agents', icon: Bot, label: 'Browse Agents', sub: 'Discover and use vetted agents' },
+                { to: '/lab', icon: FlaskConical, label: 'DX Lab', sub: 'Build and test your ideas' },
+                { to: '/how-to-publish', icon: Rocket, label: 'How to Publish', sub: 'Learn how to publish your agent' },
+                { to: '/collective', icon: Users, label: 'DX Collective', sub: 'Learn, share and grow with the community' },
+              ].map(({ to, icon: Icon, label, sub }) => (
+                <Link
+                  key={to}
+                  to={to}
+                  className="border border-gray-200 rounded-xl p-3 hover:border-red-200 hover:bg-red-50/30 transition-all group"
                 >
-                  <div className="bg-[#16161e] rounded-2xl p-5 h-full flex flex-col gap-2">
-                    <span className="text-3xl">{agent.icon}</span>
-                    <p className="text-white font-semibold text-lg leading-tight">{agent.name}</p>
-                    <p className="text-slate-400 text-sm flex-1">{agent.tagline}</p>
-                    <p className="text-violet-300 text-sm font-semibold">
-                      {agent.price === 0 ? 'Free' : `$${agent.price}/mo`}
-                    </p>
+                  <div className="w-8 h-8 rounded-lg bg-gray-100 group-hover:bg-red-100 flex items-center justify-center mb-2 transition-colors">
+                    <Icon size={16} className="text-gray-600 group-hover:text-red-600 transition-colors" />
                   </div>
+                  <p className="text-sm font-semibold text-gray-900 leading-tight">{label}</p>
+                  <p className="text-[11px] text-gray-500 mt-0.5 leading-snug">{sub}</p>
+                  <ArrowRight size={13} className="text-gray-400 group-hover:text-red-500 mt-2 transition-colors" />
+                </Link>
+              ))}
+            </div>
+          </div>
+
+          {/* Recent Activity */}
+          <div className="bg-white border border-gray-200 rounded-xl p-5">
+            <h2 className="text-base font-semibold text-gray-900 mb-4">Recent Activity</h2>
+            <div className="flex flex-col gap-3">
+              {recentActivity.map((item) => (
+                <div key={item.id} className="flex items-start gap-3">
+                  <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center shrink-0 mt-0.5">
+                    <item.icon size={12} className={item.color} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm text-gray-800 font-medium leading-tight">{item.action}</p>
+                    <p className="text-xs text-gray-400 mt-0.5">{item.sub}</p>
+                  </div>
+                  <span className="text-xs text-gray-400 shrink-0">{item.time}</span>
                 </div>
               ))}
             </div>
           </div>
-        )}
 
-        {/* Filters */}
-        <div className="flex flex-col sm:flex-row gap-4 mb-8">
-          {/* Category pills */}
-          <div className="flex gap-2 flex-wrap flex-1">
-            {categories.map((cat) => (
-              <button
-                key={cat}
-                onClick={() => setCategory(cat as typeof category)}
-                className={`text-sm px-3.5 py-1.5 rounded-full border font-medium transition-all ${
-                  category === cat
-                    ? 'bg-violet-600 border-violet-500 text-white shadow-lg shadow-violet-600/20'
-                    : 'border-white/10 text-slate-400 hover:border-white/20 hover:text-white bg-white/3'
-                }`}
-              >
-                {cat}
-              </button>
-            ))}
-          </div>
-
-          {/* Sort + price */}
-          <div className="flex gap-2 shrink-0">
-            <select
-              value={priceFilter}
-              onChange={(e) => setPriceFilter(e.target.value as typeof priceFilter)}
-              className="bg-white/5 border border-white/10 text-slate-300 text-sm rounded-lg px-3 py-1.5 focus:outline-none focus:border-violet-500/50"
-            >
-              <option value="all">All prices</option>
-              <option value="free">Free</option>
-              <option value="paid">Paid</option>
-            </select>
-            <select
-              value={sort}
-              onChange={(e) => setSort(e.target.value as SortKey)}
-              className="bg-white/5 border border-white/10 text-slate-300 text-sm rounded-lg px-3 py-1.5 focus:outline-none focus:border-violet-500/50"
-            >
-              <option value="featured">Featured first</option>
-              <option value="rating">Top rated</option>
-              <option value="installs">Most installed</option>
-              <option value="price-asc">Price: Low → High</option>
-              <option value="price-desc">Price: High → Low</option>
-            </select>
+          {/* Recommended for You */}
+          <div className="bg-white border border-gray-200 rounded-xl p-5">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h2 className="text-base font-semibold text-gray-900">Recommended for You</h2>
+                <p className="text-xs text-gray-500">Agents and resources tailored to your interests and activity.</p>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              {recommendedAgents.map((agent) => (
+                <Link
+                  key={agent.id}
+                  to={`/agent/${agent.id}`}
+                  className="border border-gray-200 rounded-xl p-3 hover:border-gray-300 hover:shadow-sm transition-all group"
+                >
+                  <div
+                    className="w-8 h-8 rounded-lg text-white text-xs font-bold flex items-center justify-center mb-2"
+                    style={{ backgroundColor: agent.logoColor }}
+                  >
+                    {agent.logoText}
+                  </div>
+                  <p className="text-sm font-semibold text-gray-900 leading-tight group-hover:text-red-600 transition-colors">{agent.name}</p>
+                  <p className="text-[11px] text-gray-500 mt-0.5 leading-snug line-clamp-2">{agent.tagline}</p>
+                  <div className="flex items-center gap-1 mt-2">
+                    <Star size={11} className="fill-amber-400 text-amber-400" />
+                    <span className="text-[11px] text-gray-500">{agent.rating}</span>
+                  </div>
+                </Link>
+              ))}
+            </div>
           </div>
         </div>
 
-        {/* Results header */}
-        <div className="flex items-center gap-2 mb-5 text-sm text-slate-500">
-          <SlidersHorizontal size={14} />
-          <span>{filtered.length} agent{filtered.length !== 1 ? 's' : ''}</span>
-          {query && <span>matching "<span className="text-slate-300">{query}</span>"</span>}
-        </div>
+        {/* Right column */}
+        <div className="flex flex-col gap-6">
+          {/* Continue Building */}
+          <div className="bg-white border border-gray-200 rounded-xl p-5">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-base font-semibold text-gray-900">Continue Building</h2>
+              <Link to="/lab" className="text-xs text-red-600 hover:text-red-700 font-medium">View All</Link>
+            </div>
+            <div className="flex flex-col gap-4">
+              {continueBuildingItems.map((item) => (
+                <div key={item.name}>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <p className="text-sm font-medium text-gray-800">{item.name}</p>
+                    <span className="text-xs text-gray-400">{item.status}</span>
+                  </div>
+                  <div className="w-full bg-gray-100 rounded-full h-1.5">
+                    <div
+                      className="bg-red-600 h-1.5 rounded-full"
+                      style={{ width: `${item.progress}%` }}
+                    />
+                  </div>
+                  <p className="text-[11px] text-gray-400 mt-0.5 text-right">{item.progress}%</p>
+                </div>
+              ))}
+            </div>
+            <Link
+              to="/lab"
+              className="mt-3 flex items-center justify-center gap-1 text-sm text-red-600 hover:text-red-700 font-medium border border-red-200 rounded-lg py-2 hover:bg-red-50 transition-colors"
+            >
+              Go to DX Lab →
+            </Link>
+          </div>
 
-        {/* Grid */}
-        {filtered.length === 0 ? (
-          <div className="text-center py-24 text-slate-500">
-            <Search size={40} className="mx-auto mb-3 opacity-30" />
-            <p className="text-lg">No agents found</p>
-            <p className="text-sm mt-1">Try a different search or filter</p>
+          {/* Leaderboard */}
+          <div className="bg-white border border-gray-200 rounded-xl p-5">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-base font-semibold text-gray-900">Leaderboard</h2>
+              <span className="text-xs text-red-600 font-medium border border-red-100 bg-red-50 px-2 py-0.5 rounded-full">This Week</span>
+            </div>
+            <div className="flex flex-col gap-3">
+              {leaderboardTop.map((person) => (
+                <div key={person.rank} className="flex items-center gap-3">
+                  <span className="text-xs font-bold text-gray-400 w-4 text-center">{person.rank}</span>
+                  <div className="w-7 h-7 rounded-full bg-gray-200 text-gray-700 text-[10px] font-bold flex items-center justify-center shrink-0">
+                    {person.avatar}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-900 truncate">{person.name}</p>
+                    <p className="text-[11px] text-gray-400 truncate">{person.title}</p>
+                  </div>
+                  <span className="text-sm font-bold text-gray-900">{person.cp.toLocaleString()}</span>
+                </div>
+              ))}
+            </div>
+            <Link
+              to="/leaderboard"
+              className="mt-3 flex items-center justify-center gap-1 text-xs text-red-600 hover:text-red-700 font-medium"
+            >
+              View Full Leaderboard →
+            </Link>
           </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-            {filtered.map((agent) => (
-              <AgentCard key={agent.id} agent={agent} />
-            ))}
+
+          {/* How to Publish */}
+          <div className="bg-white border border-gray-200 rounded-xl p-5">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-base font-semibold text-gray-900">How to Publish</h2>
+              <Link to="/how-to-publish" className="text-xs text-red-600 hover:text-red-700 font-medium">View Guide</Link>
+            </div>
+            <div className="flex items-center gap-1 mb-3">
+              {publishSteps.map((step, i) => (
+                <div key={step.label} className="flex items-center gap-1 flex-1">
+                  <div className="flex flex-col items-center gap-1 flex-1">
+                    <div className="w-6 h-6 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center">
+                      <TrendingUp size={11} className="text-gray-500" />
+                    </div>
+                    <p className="text-[9px] text-gray-500 text-center leading-tight">{step.label}</p>
+                  </div>
+                  {i < publishSteps.length - 1 && <ArrowRight size={10} className="text-gray-300 shrink-0 mb-3" />}
+                </div>
+              ))}
+            </div>
+            <p className="text-xs text-gray-500 mb-3">Ready to share your agent with the enterprise?</p>
+            <button className="w-full bg-red-600 hover:bg-red-700 text-white text-sm font-semibold py-2.5 rounded-lg transition-colors">
+              Start Publishing
+            </button>
           </div>
-        )}
+        </div>
       </div>
     </div>
   );

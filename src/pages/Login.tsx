@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { Bot, Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 export default function Login() {
@@ -29,39 +29,38 @@ export default function Login() {
   };
 
   return (
-    <div className="flex-1 flex items-center justify-center px-4 py-16">
+    <div className="flex-1 flex items-center justify-center px-4 py-16 bg-gray-50">
       <div className="w-full max-w-sm">
         <div className="flex flex-col items-center mb-8">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-violet-500/20 mb-4">
-            <Bot size={24} className="text-white" />
+          <div className="flex items-center gap-1.5 mb-6">
+            <span className="text-2xl font-black text-red-600">DX</span>
+            <span className="text-base font-semibold text-gray-900">AgentPlace</span>
           </div>
-          <h1 className="text-2xl font-bold text-white">Welcome back</h1>
-          <p className="text-slate-400 text-sm mt-1">Sign in to AgentMarket</p>
+          <h1 className="text-xl font-bold text-gray-900">Welcome back</h1>
+          <p className="text-sm text-gray-500 mt-1">Sign in to your account</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="bg-[#16161e] border border-white/8 rounded-2xl p-6 flex flex-col gap-4">
+        <form onSubmit={handleSubmit} className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm flex flex-col gap-4">
           {error && (
-            <div className="bg-red-500/10 border border-red-500/20 text-red-400 text-sm px-4 py-2.5 rounded-lg">
+            <div className="bg-red-50 border border-red-200 text-red-600 text-sm px-4 py-2.5 rounded-lg">
               {error}
             </div>
           )}
-
           <div>
-            <label className="text-slate-400 text-sm block mb-1.5">Email</label>
+            <label className="text-sm font-medium text-gray-700 block mb-1.5">Email</label>
             <input
               type="email"
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-white placeholder-slate-600 focus:outline-none focus:border-violet-500/60 text-sm"
-              placeholder="you@example.com"
+              className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-red-400 focus:ring-1 focus:ring-red-100 transition-all"
+              placeholder="you@company.com"
             />
           </div>
-
           <div>
             <div className="flex justify-between mb-1.5">
-              <label className="text-slate-400 text-sm">Password</label>
-              <button type="button" className="text-violet-400 text-xs hover:text-violet-300 transition-colors">
+              <label className="text-sm font-medium text-gray-700">Password</label>
+              <button type="button" className="text-xs text-red-600 hover:text-red-700 font-medium transition-colors">
                 Forgot password?
               </button>
             </div>
@@ -71,39 +70,28 @@ export default function Login() {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 pr-10 text-white placeholder-slate-600 focus:outline-none focus:border-violet-500/60 text-sm"
+                className="w-full border border-gray-200 rounded-lg px-3 py-2.5 pr-10 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-red-400 focus:ring-1 focus:ring-red-100 transition-all"
                 placeholder="••••••••"
               />
-              <button
-                type="button"
-                onClick={() => setShowPw((v) => !v)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300"
-              >
+              <button type="button" onClick={() => setShowPw((v) => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
                 {showPw ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
             </div>
           </div>
-
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-violet-600 hover:bg-violet-500 disabled:opacity-50 text-white font-semibold py-3 rounded-xl transition-colors mt-1 flex items-center justify-center gap-2"
+            className="w-full bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white font-semibold py-2.5 rounded-lg transition-colors flex items-center justify-center gap-2 mt-1 text-sm"
           >
             {loading && <span className="animate-spin w-4 h-4 border-2 border-white/30 border-t-white rounded-full" />}
             Sign in
           </button>
-
-          <p className="text-center text-slate-500 text-sm">
+          <p className="text-center text-gray-500 text-sm">
             No account?{' '}
-            <Link to="/signup" className="text-violet-400 hover:text-violet-300 font-medium transition-colors">
-              Create one
-            </Link>
+            <Link to="/signup" className="text-red-600 hover:text-red-700 font-medium transition-colors">Create one</Link>
           </p>
         </form>
-
-        <p className="text-center text-slate-600 text-xs mt-6">
-          Demo: enter any email + password to sign in
-        </p>
+        <p className="text-center text-gray-400 text-xs mt-5">Demo: any email + password works</p>
       </div>
     </div>
   );
